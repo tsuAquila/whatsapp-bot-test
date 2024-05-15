@@ -1,9 +1,10 @@
 {
   "dependencies": {
-    "@wppconnect-team/wppconnect": "^1.30.1",
-    "express": "^4.18.3"
+    "@wppconnect-team/wppconnect": "latest",
+    "express": "latest",
+    "puppeteer": "latest"
   },
-  "name": "whatsapp-bot-test",
+  "name": "whatsapp-bot",
   "version": "1.0.0",
   "main": "bot.js",
   "scripts": {

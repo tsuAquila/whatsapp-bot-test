@@ -1,0 +1,32 @@
+# Use the official Node.js 14 image.
+# https://hub.docker.com/_/node
+FROM node:14
+
+# Create and change to the app directory.
+WORKDIR /usr/src/app
+
+# Copy application dependency manifests to the container image.
+# A wildcard is used to ensure both package.json AND package-lock.json are copied.
+# Copying this separately prevents re-running npm install on every code change.
+COPY package*.json ./
+
+RUN apt-get update
+
+RUN apt-get install -y wget gnupg ca-certificates procps libxshmfence-dev && \
+    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+    sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' && \
+    apt-get update && apt-get install -y google-chrome-stable && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install all dependencies (including 'devDependencies' for Puppeteer)
+RUN npm install
+RUN npm i puppeteer
+
+# Copy local code to the container image.
+COPY . .
+
+# Expose port 3000 for the application.
+EXPOSE 3000
+
+# Run the web service on container startup.
+CMD [ "node", "bot.js" ]
