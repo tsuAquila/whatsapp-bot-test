@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WhatsApp Message Sender</title>
+  </head>
+
+  <body>
+    <form id="whatsappForm">
+      <label for="countryCode">Country Code</label>
+      <input type="text" name="countryCode" id="countryCode" /><br />
+      <label for="phoneNumber">Phone Number:</label><br />
+      <input type="text" id="phoneNumber" name="phoneNumber" /><br />
+      <label for="message">Message:</label><br />
+      <textarea id="message" name="message"></textarea><br />
+      <input type="submit" value="Send Message" />
+    </form>
+
+    <script>
+      document
+        .getElementById("whatsappForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          var countryCode = document.getElementById("countryCode").value;
+          var phoneNumber = document.getElementById("phoneNumber").value;
+          var message = document.getElementById("message").value;
+          fetch("/send-message", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ countryCode, phoneNumber, message }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              // Handle the response data here
+            });
+        });
+    </script>
+  </body>
+</html>
