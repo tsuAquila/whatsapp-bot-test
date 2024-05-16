@@ -1,6 +1,6 @@
-# Use the official Node.js 14 image.
+# Use the official Node.js 20 image.
 # https://hub.docker.com/_/node
-FROM node:14
+FROM node:18.20.2-buster
 
 # Create and change to the app directory.
 WORKDIR /usr/src/app
@@ -11,16 +11,11 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 RUN apt-get update
+RUN apt-get upgrade
 
-RUN apt-get install -y wget gnupg ca-certificates procps libxshmfence-dev && \
-    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' && \
-    apt-get update && apt-get install -y google-chrome-stable && \
-    rm -rf /var/lib/apt/lists/*
+# RUN apt-get install -y libnss3
 
-# Install all dependencies (including 'devDependencies' for Puppeteer)
 RUN npm install
-RUN npm i puppeteer
 
 # Copy local code to the container image.
 COPY . .
