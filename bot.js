@@ -19,7 +19,7 @@ wppconnect
       // Logging the sender's phone number and message
       console.log(message.from);
       console.log(message.body);
-      
+
       // Responding to "/start" command
       if (message.body == "/start") {
         client.sendText(message.from, "Hello there! I am a whatsapp bot.");
