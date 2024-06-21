@@ -1,0 +1,15 @@
+registration process:
+	/register
+	"welcome to akef event registration"
+	show event list
+	select event using nums
+	show event details
+	get info from user:
+		team name, player names, extra mobile nums
+	send qr code for payment with specific amount
+	we'll get back to you
+
+acceptance:
+	on approval:
+		send "accepted" message to user
+		add user to event group
