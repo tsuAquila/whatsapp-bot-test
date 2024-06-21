@@ -13,3 +13,10 @@ acceptance:
 	on approval:
 		send "accepted" message to user
 		add user to event group
+
+
+a phone number can be used only once per event
+
+
+as of now, the bot has no memory retention.
+gotta implement sqlite (yea ik).
