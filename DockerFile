@@ -1,20 +1,13 @@
-# Use the official Node.js 20 image.
-# https://hub.docker.com/_/node
+# Use the official Node.js 18 image.
 FROM node:18.20.2-buster
 
 # Create and change to the app directory.
 WORKDIR /usr/src/app
 
 # Copy application dependency manifests to the container image.
-# A wildcard is used to ensure both package.json AND package-lock.json are copied.
-# Copying this separately prevents re-running npm install on every code change.
 COPY package*.json ./
 
-RUN apt-get update
-RUN apt-get upgrade
-
-# RUN apt-get install -y libnss3
-
+# Install dependencies 
 RUN npm install
 
 # Copy local code to the container image.
@@ -22,6 +15,13 @@ COPY . .
 
 # Expose port 3000 for the application.
 EXPOSE 3000
+
+# Download the correct Chromium version for your Puppeteer version
+RUN npx puppeteer browsers install chrome
+
+# Set the environment variable pointing to the Chromium executable
+ENV PUPPETEER_EXECUTABLE_PATH /usr/src/app/node_modules/puppeteer/chrome/linux-125.0.6422.60/chrome-linux64/chrome
+
 
 # Run the web service on container startup.
 CMD [ "node", "bot.js" ]

@@ -2,3 +2,5 @@ node_modules
 npm-debug.log
 tokens
 package-lock.json
+.gitignore
+readme.md
