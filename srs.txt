@@ -19,4 +19,4 @@ a phone number can be used only once per event
 
 
 as of now, the bot has no memory retention.
-gotta implement sqlite (yea ik).
+-> sqlite (yea ik).
