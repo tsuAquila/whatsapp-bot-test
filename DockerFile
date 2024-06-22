@@ -1,27 +1,41 @@
-# Use the official Node.js 18 image.
 FROM node:18.20.2-buster
 
-# Create and change to the app directory.
 WORKDIR /usr/src/app
 
-# Copy application dependency manifests to the container image.
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies 
-RUN npm install
+# Install dependencies with retry mechanism
+RUN apt-get update && apt-get install -y curl && \
+    npm install -g npm@latest && \
+    for i in 1 2 3 4 5; do npm ci && break || sleep 15; done
 
-# Copy local code to the container image.
+# Copy the rest of the application code
 COPY . .
 
-# Expose port 3000 for the application.
+# Install Chromium dependencies
+RUN apt-get update && apt-get install -y \
+    chromium \
+    libatk-bridge2.0-0 \
+    libgtk-3-0 \
+    libnss3 \
+    libx11-xcb1 \
+    libxcb-dri3-0 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxss1 \
+    libxtst6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set the environment variable for Puppeteer to use the installed Chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+# Expose port 3000 for the application
 EXPOSE 3000
 
-# Download the correct Chromium version for your Puppeteer version
-RUN npx puppeteer browsers install chrome
-
-# Set the environment variable pointing to the Chromium executable
-ENV PUPPETEER_EXECUTABLE_PATH /usr/src/app/node_modules/puppeteer/chrome/linux-125.0.6422.60/chrome-linux64/chrome
-
-
-# Run the web service on container startup.
-CMD [ "node", "bot.js" ]
+# Run the application
+CMD ["node", "bot.js"]
