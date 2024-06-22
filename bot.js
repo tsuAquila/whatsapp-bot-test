@@ -11,20 +11,20 @@ let eventList = [
     eventName: "Clash of Titans",
     eventDescription: "a coc tournament",
     eventAdmins: ["918248654856@c.us"],
-    eventRegistrationTemplate: "",
+    eventRegistrationTemplate: "Player Details\n\nPlayer 1:\nPlayer 2:",
   },
   {
     eventID: "2",
     eventName: "Valorant Masters",
     eventDescription: "a valorant tournament",
     eventAdmins: ["918248654856@c.us"],
-    eventRegistrationTemplate: "",
+    eventRegistrationTemplate: "Player Details\n\nPlayer 1:\nPlayer 2:",
   },
 ];
 
-let registrationOnProgress = [];
-let registrationCompleted = [];
-let registrationVerified = [];
+let registrationOnProgress = {};
+let registrationCompleted = {};
+let registrationVerified = {};
 
 function formatEventList(eventList) {
   return eventList
@@ -40,8 +40,8 @@ function formatPhoneNumber(phoneNumber) {
   return "+" + phoneNumber.replace("@c.us", "");
 }
 
-function isPhoneNumberPresent(arr, phoneNumber) {
-  for (let obj of arr) {
+function isPhoneNumberPresent(dict, key, phoneNumber) {
+  for (let obj of dict[key]) {
     if (obj.phoneNumber === phoneNumber) {
       return true;
     }
@@ -50,17 +50,26 @@ function isPhoneNumberPresent(arr, phoneNumber) {
   return false;
 }
 
+function removeObject(array, keyToCheck, valueToCheck) {
+  return array.filter((item) => item[keyToCheck] !== valueToCheck);
+}
+
+function initializeRegistrationObjects() {
+  eventList.forEach((event) => {
+    registrationOnProgress[event.eventID] = [];
+    registrationCompleted[event.eventID] = [];
+    registrationVerified[event.eventID] = [];
+  });
+}
+
 wppconnect
   .create()
   .then((whatsappClient) => {
     client = whatsappClient;
 
-    client.onMessage((message) => {
-      // console.log("from");
-      // console.log(message.from);
-      // console.log("body");
-      // console.log(message.body);
+    initializeRegistrationObjects();
 
+    client.onMessage((message) => {
       if (message.author == undefined) {
         if (message.body == "/test") {
           client.sendText(
@@ -93,25 +102,49 @@ wppconnect
                 phoneNumber: message.from,
               };
               if (
-                !isPhoneNumberPresent(registrationOnProgress, message.from) &&
-                !isPhoneNumberPresent(registrationCompleted, message.from) &&
-                !isPhoneNumberPresent(registrationVerified, message.from)
+                !isPhoneNumberPresent(
+                  registrationOnProgress,
+                  eventID,
+                  message.from
+                ) &&
+                !isPhoneNumberPresent(
+                  registrationCompleted,
+                  eventID,
+                  message.from
+                ) &&
+                !isPhoneNumberPresent(
+                  registrationVerified,
+                  eventID,
+                  message.from
+                )
               ) {
-                registrationOnProgress.push(newRegistrationEntry);
+                registrationOnProgress[eventID].push(newRegistrationEntry);
                 client.sendText(
                   message.from,
                   "Copy the following template and fill out the required fields:\n"
                 );
                 client.sendText(
                   message.from,
-                  `/entry\n\n${
+                  `/entry ${eventList[eventIDInt - 1].eventID}\n\n${
                     eventList[eventIDInt - 1].eventRegistrationTemplate
                   }`
                 );
               } else if (
-                isPhoneNumberPresent(registrationOnProgress, message.from) &&
-                !isPhoneNumberPresent(registrationCompleted, message.from) &&
-                !isPhoneNumberPresent(registrationVerified, message.from)
+                isPhoneNumberPresent(
+                  registrationOnProgress,
+                  eventID,
+                  message.from
+                ) &&
+                !isPhoneNumberPresent(
+                  registrationCompleted,
+                  eventID,
+                  message.from
+                ) &&
+                !isPhoneNumberPresent(
+                  registrationVerified,
+                  eventID,
+                  message.from
+                )
               ) {
                 client.sendText(
                   message.from,
@@ -119,13 +152,21 @@ wppconnect
                 );
                 client.sendText(
                   message.from,
-                  `/entry\n\n${
+                  `/entry ${eventList[eventIDInt - 1].eventID}\n\n${
                     eventList[eventIDInt - 1].eventRegistrationTemplate
                   }`
                 );
               } else if (
-                isPhoneNumberPresent(registrationCompleted, message.from) ||
-                isPhoneNumberPresent(registrationVerified, message.from)
+                isPhoneNumberPresent(
+                  registrationCompleted,
+                  eventID,
+                  message.from
+                ) ||
+                isPhoneNumberPresent(
+                  registrationVerified,
+                  eventID,
+                  message.from
+                )
               ) {
                 client.sendText(
                   message.from,
@@ -138,7 +179,6 @@ wppconnect
                 );
               }
             }
-            // console.log(registrationOnProgress);
           } catch (error) {
             client.sendText(
               message.from,
@@ -148,6 +188,36 @@ wppconnect
         }
 
         if (message.body.startsWith("/entry")) {
+          try {
+            const contentMatch = message.body.match(/\/entry (\d+)([\s\S]+)/);
+            if (!contentMatch) {
+              throw new Error(
+                "Invalid input format or no content after '/entry <number>'"
+              );
+            }
+            const eventID = contentMatch[1];
+            const registrationData = contentMatch[2].trim();
+            if (
+              isPhoneNumberPresent(registrationCompleted, eventID, message.from)
+            ) {
+              client.sendText(
+                message.from,
+                "You have already registered for this event."
+              );
+              throw new Error("Already registered");
+            }
+            const newRegistrationEntry = {
+              eventID: eventID,
+              phoneNumber: message.from,
+              registrationData: registrationData,
+            };
+            registrationCompleted[eventID].push(newRegistrationEntry);
+            registrationOnProgress[eventID] = removeObject(
+              registrationOnProgress[eventID],
+              "phoneNumber",
+              message.from
+            );
+          } catch {}
         }
       }
     });
@@ -156,7 +226,6 @@ wppconnect
     console.error("Error creating client:", error);
   });
 
-// express middleware
 app.use(express.static("public"));
 
 app.post("/send-message", express.json(), (req, res) => {
